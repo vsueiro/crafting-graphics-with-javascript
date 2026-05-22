@@ -1,0 +1,111 @@
+<style>
+#chart {
+  width: 720px;
+  height: 480px;
+  position: relative;
+  /* background: #eee; */
+  /* box-shadow: 0 0 0 1px gray; */
+}
+
+.mark {
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  translate: -50% -50%;
+  /* opacity: .75; */
+  rotate: 15deg;
+  animation-name: spin;
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+  /* animation-duration: 2s; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* .mark::after {
+  content: "";
+  display: block;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: white;
+  flex-shrink: 0;
+} */
+
+@keyframes spin {
+  to {
+    rotate: 30deg;
+  }
+}
+
+</style>
+
+<div id="chart"></div>
+
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"
+
+// Load data
+const players = await d3.csv('players.csv', d3.autoType);
+
+// Sort by points
+players.sort((a, b) => a.PTS - b.PTS);
+
+// Get min and max values for weight
+const extentWeight = d3.extent(players, d => d.PLAYER_WEIGHT);
+
+// Get min and max values for height
+const extentHeight = d3.extent(players, d => d.PLAYER_HEIGHT_INCHES);
+
+// Get min and max values for points
+const extentPoints = d3.extent(players, d => d.PTS);
+
+const extentAge = d3.extent(players, d => d.AGE);
+
+// Create x scale function
+const scaleX = d3.scaleLinear().domain([150,300]).range([0,100]);
+
+// Create y scale function
+const scaleY = d3.scaleLinear().domain([68,90]).range([100, 0]);
+
+// Create mark width scale function
+const scaleWidth = d3.scaleLinear().domain(extentWeight).range([2,8]);
+
+// Create mark height scale function
+const scaleHeight = d3.scaleLinear().domain(extentHeight).range([8,80]);
+
+// 
+const scaleColor = d3.scaleLinear().domain(extentPoints).range([.1,1]);
+
+// const scaleOpacity = d3.scaleDiverging([-20, 20], d3.interpolateRdBu);
+
+const scaleSpeed = d3.scaleLinear().domain(extentAge).range([1, 4]);
+
+console.log(scaleSpeed(23))
+
+chart.style.background = d3.interpolateMagma(0);
+
+for (let player of players) {
+
+  if (player.PLAYER_WEIGHT === "null" || player.PLAYER_HEIGHT_INCHES === "null") {
+    console.log('Skipping', player);
+    continue;
+  }
+
+  const mark = document.createElement("div");
+  mark.classList.add("mark");
+  mark.title = player.PLAYER_NAME;
+  mark.style.left = scaleX(player.PLAYER_WEIGHT) + '%';
+  mark.style.top = scaleY(player.PLAYER_HEIGHT_INCHES) + '%';
+
+  mark.style.width = scaleWidth(player.PLAYER_WEIGHT) + 'px';
+  mark.style.height = scaleHeight(player.PLAYER_HEIGHT_INCHES) + 'px';
+  mark.style.background = d3.interpolateMagma(scaleColor(player.PTS));
+
+  mark.style.animationDuration = scaleSpeed(player.AGE) + 's';
+
+  chart.append(mark);
+}
+</script>
