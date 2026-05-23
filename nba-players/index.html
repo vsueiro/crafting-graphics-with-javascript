@@ -1,8 +1,14 @@
 <style>
+body {
+  display: grid;
+  background: black;
+}
+
 #chart {
   width: 720px;
   height: 480px;
   position: relative;
+  place-self: center;
   /* background: #eee; */
   /* box-shadow: 0 0 0 1px gray; */
 }
@@ -11,7 +17,7 @@
   width: 16px;
   height: 16px;
   position: absolute;
-  translate: -50% -50%;
+  translate: -50% -100%;
   /* opacity: .75; */
   rotate: 15deg;
   animation-name: spin;
@@ -22,6 +28,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  transform-origin: center bottom;
 }
 
 /* .mark::after {
@@ -36,7 +43,7 @@
 
 @keyframes spin {
   to {
-    rotate: 30deg;
+    rotate: 20deg;
   }
 }
 
@@ -47,11 +54,25 @@
 <script type="module">
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"
 
+let team//  = "SAS";
+
 // Load data
-const players = await d3.csv('players.csv', d3.autoType);
+let players = await d3.csv('players-2025-26-regular-season.csv', d3.autoType);
+
+console.log(players.length);
+
+// Filter by 10+ games played
+players = players.filter(d => d.GP >= 10);
+
+console.log(players.length);
 
 // Sort by points
 players.sort((a, b) => a.PTS - b.PTS);
+
+// Sort by team
+if (team) {
+  players.sort((a, b) => a.TEAM_ABBREVIATION === team ? 1 : -1 );
+}
 
 // Get min and max values for weight
 const extentWeight = d3.extent(players, d => d.PLAYER_WEIGHT);
@@ -65,27 +86,24 @@ const extentPoints = d3.extent(players, d => d.PTS);
 const extentAge = d3.extent(players, d => d.AGE);
 
 // Create x scale function
-const scaleX = d3.scaleLinear().domain([150,300]).range([0,100]);
+const scaleX = d3.scaleLinear().domain([150,320]).range([0,100]);
 
 // Create y scale function
-const scaleY = d3.scaleLinear().domain([68,90]).range([100, 0]);
+const scaleY = d3.scaleLinear().domain([66,90]).range([100, 0]);
 
 // Create mark width scale function
-const scaleWidth = d3.scaleLinear().domain(extentWeight).range([2,8]);
+const scaleWidth = d3.scaleLinear().domain(extentWeight).range([2,10]);
 
 // Create mark height scale function
-const scaleHeight = d3.scaleLinear().domain(extentHeight).range([8,80]);
+const scaleHeight = d3.scaleLinear().domain(extentHeight).range([10,50]);
 
 // 
-const scaleColor = d3.scaleLinear().domain(extentPoints).range([.1,1]);
+const scaleColor = d3.scaleLinear().domain(extentPoints).range([.2,1]);
 
-// const scaleOpacity = d3.scaleDiverging([-20, 20], d3.interpolateRdBu);
-
+//
 const scaleSpeed = d3.scaleLinear().domain(extentAge).range([1, 4]);
 
-console.log(scaleSpeed(23))
-
-chart.style.background = d3.interpolateMagma(0);
+chart.style.background = d3.interpolateMagma(0.05);
 
 for (let player of players) {
 
@@ -102,9 +120,19 @@ for (let player of players) {
 
   mark.style.width = scaleWidth(player.PLAYER_WEIGHT) + 'px';
   mark.style.height = scaleHeight(player.PLAYER_HEIGHT_INCHES) + 'px';
-  mark.style.background = d3.interpolateMagma(scaleColor(player.PTS));
-
   mark.style.animationDuration = scaleSpeed(player.AGE) + 's';
+  
+  if (team) {
+    if (player.TEAM_ABBREVIATION === team) {
+      mark.style.background = d3.interpolateMagma(scaleColor(player.PTS));
+    } else {
+      mark.style.background = d3.interpolateMagma(0.1);
+      mark.style.opacity = .5;
+      mark.style.pointerEvents = "none";
+    }
+  } else {
+    mark.style.background = d3.interpolateMagma(scaleColor(player.PTS));
+  }
 
   chart.append(mark);
 }
