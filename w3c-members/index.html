@@ -1,0 +1,82 @@
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    ol, li, p {
+        margin: 0;
+        list-style: none;
+    }
+
+    body {
+        font-family: sans-serif;
+        background: lavender;
+        color: indigo;
+    }
+
+    #chart {
+        display: grid;
+        /* flex-wrap: wrap; */
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+        font-size: 12px;
+        gap: 16px;
+    }
+
+    .country {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }    
+
+    .country span {
+        color: deeppink;
+    }
+
+    .dots {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: start;
+        justify-content: start;
+        gap: 1px;
+    }
+
+    .dot {
+        background: deeppink;
+        aspect-ratio: 1;
+        /* box-shadow: inset 0 0 0 .5px lavender; */
+        border-radius: 50%;
+        /* border: 1px solid white; */
+    }
+</style>
+
+<ol id="chart"></div>
+
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm"
+
+const countries = await d3.csv("countries.csv", d3.autoType)
+
+const dotSize = 8;
+const gapSize = 1;
+
+for (let country of countries) {
+
+    const containerSize = Math.ceil(Math.sqrt(country.members)) * (dotSize + gapSize);
+
+    chart.innerHTML += `
+        <li class="country">
+            <p>
+                <strong>
+                    ${ country.name }
+                    <span>${country.members}</span>
+                </strong>
+            </p>
+            <div class="dots" style="width: ${containerSize}px">
+                ${ `<div class="dot" style="width: ${dotSize}px"></div>`.repeat(country.members) }
+            </div>
+        </li>
+    `
+
+}
+
+</script>
